@@ -142,7 +142,9 @@ var _Stream_closeWritable = function (stream) {
   });
 };
 
-var _Stream_pipeThrough = F2(function (transformer, readable) {
+var _Stream_pipeThrough = F2(function (getTransformer, readable) {
+  const transformer = getTransformer();
+
   return __Scheduler_binding(function (callback) {
     if (readable.locked || transformer.writable.locked) {
       return callback(__Scheduler_fail(__Stream_Locked));
@@ -175,21 +177,19 @@ var _Stream_pipeTo = F2(function (writable, readable) {
 });
 
 var _Stream_identityTransformation = F2(function (readCapacity, writeCapacity) {
-  return __Scheduler_binding(function (callback) {
-    const transformStream = new TransformStream(
+  return function () {
+    return new TransformStream(
       {},
       new CountQueuingStrategy({ highWaterMark: writeCapacity }),
       new CountQueuingStrategy({ highWaterMark: readCapacity }),
     );
-
-    return callback(__Scheduler_succeed(transformStream));
-  });
+  };
 });
 
 var _Stream_customTransformation = F4(
   function (toAction, initState, readCapacity, writeCapacity) {
-    return __Scheduler_binding(function (callback) {
-      const transformStream = new TransformStream(
+    return function () {
+      return new TransformStream(
         {
           start() {
             this.state = initState;
@@ -245,9 +245,7 @@ var _Stream_customTransformation = F4(
         new CountQueuingStrategy({ highWaterMark: writeCapacity }),
         new CountQueuingStrategy({ highWaterMark: readCapacity }),
       );
-
-      return callback(__Scheduler_succeed(transformStream));
-    });
+    };
   },
 );
 
@@ -259,22 +257,22 @@ var _Stream_writable = function (transformStream) {
   return transformStream.writable;
 };
 
-var _Stream_textEncoder = __Scheduler_binding(function (callback) {
-  return callback(__Scheduler_succeed(new TextEncoderStream()));
-});
+var _Stream_textEncoder = function () {
+  return new TextEncoderStream();
+};
 
-var _Stream_textDecoder = __Scheduler_binding(function (callback) {
-  return callback(__Scheduler_succeed(new TextDecoderStream()));
-});
+var _Stream_textDecoder = function () {
+  return new TextDecoderStream();
+};
 
 var _Stream_compressor = function (algo) {
-  return __Scheduler_binding(function (callback) {
-    return callback(__Scheduler_succeed(new CompressionStream(algo)));
-  });
+  return function () {
+    return new CompressionStream(algo);
+  };
 };
 
 var _Stream_decompressor = function (algo) {
-  return __Scheduler_binding(function (callback) {
-    return callback(__Scheduler_succeed(new DecompressionStream(algo)));
-  });
+  return function () {
+    return new DecompressionStream(algo);
+  };
 };
